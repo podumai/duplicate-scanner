@@ -12,7 +12,7 @@ namespace duplicate_scanner::utility {
 template<typename HasherType>
 class [[nodiscard]] Hasher final : public details::AbstractHasher {
  public:
-  [[nodiscard]] auto operator()(const std::vector<char>& bytes) const -> std::size_t override {
+  [[nodiscard]] auto operator()(std::span<char const> bytes) const -> std::size_t override {
     HasherType hasher{};
     boost::hash2::hash_append(hasher, {}, bytes);
     return boost::hash2::get_integral_result<std::size_t>(hasher);

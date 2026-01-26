@@ -1,0 +1,3 @@
+add_subdirectory(cmdline_parser)
+add_subdirectory(scanner)
+add_subdirectory(memory_manager)

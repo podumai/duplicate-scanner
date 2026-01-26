@@ -1,16 +1,24 @@
-//
-// Created by podumai on 1/20/26.
-//
-
 #ifndef DUPSCANNER_ABSTRACT_HASHER_HPP
 #define DUPSCANNER_ABSTRACT_HASHER_HPP
 
-namespace duplicate_scanner {
-namespace details {
+#include <cstdint>
+#include <span>
 
-class abstract_hasher { };
+namespace duplicate_scanner::details {
 
-}  // namespace details
-}  // namespace duplicate_scanner
+class AbstractHasher {
+ public:
+  AbstractHasher() noexcept = default;
+  AbstractHasher(const AbstractHasher&) noexcept = default;
+  AbstractHasher(AbstractHasher&&) noexcept = default;
+  virtual ~AbstractHasher() = default;
+
+  auto operator=(const AbstractHasher&) noexcept -> AbstractHasher& = default;
+  auto operator=(AbstractHasher&&) noexcept -> AbstractHasher& = default;
+
+  [[nodiscard]] virtual auto operator()(std::span<char const> bytes) const -> std::size_t = 0;
+};
+
+}  // namespace duplicate_scanner::details
 
 #endif  // DUPSCANNER_ABSTRACT_HASHER_HPP
