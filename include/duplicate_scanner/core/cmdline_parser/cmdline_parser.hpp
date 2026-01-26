@@ -47,8 +47,10 @@ class [[nodiscard]] CmdLineParser {
 
   [[nodiscard]] auto helpDescriptionRequested() const -> bool;
 
+ private:
   static auto normalizePaths(std::pmr::vector<std::filesystem::path>& paths) -> void;
 
+ public:
   [[nodiscard]] auto createConfiguration() const -> utility::Configuration;
 
   static auto printHelpDescription() -> void;
