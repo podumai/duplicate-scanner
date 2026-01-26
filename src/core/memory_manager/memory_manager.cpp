@@ -9,14 +9,14 @@ MemoryManager MemoryManager::memory_manager{};
 [[nodiscard]] auto MemoryManager::instance() -> MemoryManager& { return memory_manager; }
 
 [[nodiscard]] auto MemoryManager::do_allocate(std::size_t const bytes, std::size_t const alignment) -> void* {
-  if (bytes <= 64) {
+  if (bytes <= kLargestSmallPoolBlock) {
     return small_object_resource_.allocate(bytes, alignment);
   }
   return general_pool_resource_.allocate(bytes, alignment);
 }
 
 auto MemoryManager::do_deallocate(void* ptr, std::size_t const bytes, std::size_t const alignment) -> void {
-  if (bytes <= 64) {
+  if (bytes <= kLargestSmallPoolBlock) {
     small_object_resource_.deallocate(ptr, bytes, alignment);
     return;
   }
