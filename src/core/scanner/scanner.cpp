@@ -79,12 +79,12 @@ auto Scanner::run() const -> void {
       continue;
     }
 
-    for (auto const& [file_size, file_group] :
+    for (auto&& [file_size, file_group] :
          makeFileGroup(directory) | std::views::filter([] [[nodiscard]] (auto const& file_group_data) -> bool {
            return file_group_data.second.size() > 1;
          })) {
       std::pmr::map<std::uintmax_t, std::pmr::vector<FilePtr>> result{};
-      std::pmr::vector files{file_group};
+      std::pmr::vector files{std::move(file_group)};
       for (std::uintmax_t read_bytes{}; read_bytes < file_size; read_bytes += block_size_) {
         std::pmr::map<std::uintmax_t, std::pmr::vector<FilePtr>> filtered_file_groups{};
         std::ranges::for_each(
