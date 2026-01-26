@@ -1,0 +1,8 @@
+//
+// Created by podumai on 1/22/26.
+//
+
+#ifndef DUPSCANNER_MEMORY_MANAGER_HPP
+#define DUPSCANNER_MEMORY_MANAGER_HPP
+
+#endif  // DUPSCANNER_MEMORY_MANAGER_HPP
