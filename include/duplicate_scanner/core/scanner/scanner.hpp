@@ -26,7 +26,7 @@ class [[nodiscard]] Scanner {
       std::is_nothrow_move_constructible<std::pmr::vector<std::filesystem::path>>,
       std::is_nothrow_move_constructible<std::pmr::unordered_set<std::filesystem::path>>,
       std::is_nothrow_move_constructible<utility::HasherFactory::HasherPtr>>
-  ) = delete;
+  ) = default;
 
   ~Scanner() = default;
 
@@ -38,7 +38,7 @@ class [[nodiscard]] Scanner {
       std::is_nothrow_move_assignable<std::pmr::vector<std::filesystem::path>>,
       std::is_nothrow_move_assignable<std::pmr::unordered_set<std::filesystem::path>>,
       std::is_nothrow_move_assignable<utility::HasherFactory::HasherPtr>>
-  ) -> Scanner& = delete;
+  ) -> Scanner& = default;
 
  private:
   using HasherPtr = utility::HasherFactory::HasherPtr;
