@@ -122,8 +122,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: 'read'
+      packages: 'read'
     container:
       image: 'ghcr.io/podumai/cpp:0.2.0-ubuntu26.04'
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     needs: [ 'config', 'pre-compute-next-version' ]
     strategy:
       matrix:
@@ -188,24 +192,28 @@ jobs:
         uses: 'aminya/setup-cpp@v1'
         with:
           compiler: ${{ needs.config.outputs.macos-compiler }}
-          cmake: true
-          conan: true
           ninja: true
 
       - name: '[Release] Advance project version'
         if: github.event_name == 'push'
         run: 'echo ${{ needs.pre-compute-next-version.outputs.next_project_version }} > PROJECT_VERSION'
 
+      - name: 'Install uv to manage dev dependencies'
+        run: 'curl -LsSf https://astral.sh/uv/0.13.7/install.sh | sh'
+
+      - name: 'Sync dev dependencies'
+        run: 'uv sync --frozen'
+
       - name: 'Install project dependencies'
         env:
           CONAN_HOME: '${{ github.workspace }}/.conan2'
-        run: 'conan install . --build=missing -pr:a ${{ needs.config.outputs.macos-conan-profile }}'
+        run: 'uv run conan install . --build=missing -pr:a ${{ needs.config.outputs.macos-conan-profile }}'
 
       - name: 'Configure project'
-        run: 'cmake --preset ${{ needs.config.outputs.conan-preset }}'
+        run: 'uv run cmake --preset ${{ needs.config.outputs.conan-preset }}'
 
       - name: 'Build project'
-        run: 'cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
+        run: 'uv run cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
 
       - name: 'Archive final executable'
         run: 'tar -czvf duplicate-scanner-macos-arm64.tar.gz -C build/${{ needs.config.outputs.action-type }}/bin .'
@@ -238,18 +246,22 @@ jobs:
       - name: 'Setup C++ build dependencies'
         uses: 'aminya/setup-cpp@v1'
         with:
-          conan: true
-          cmake: true
           ninja: true
 
+      - name: 'Install uv to manage dev dependencies'
+        run: 'powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/0.13.7/install.ps1 | iex"'
+
+      - name: 'Sync dev dependencies'
+        run: 'uv sync --frozen'
+
       - name: 'Install project dependencies'
-        run: 'conan install --build=missing -pr:a ${{ needs.config.outputs.windows-conan-profile }} .'
+        run: 'uv run conan install --build=missing -pr:a ${{ needs.config.outputs.windows-conan-profile }} .'
 
       - name: 'Configure project'
-        run: 'cmake --preset ${{ needs.config.outputs.conan-preset }}'
+        run: 'uv run cmake --preset ${{ needs.config.outputs.conan-preset }}'
 
       - name: 'Build project'
-        run: 'cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
+        run: 'uv run cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
 
       - name: 'Archive final executable'
         run: >
