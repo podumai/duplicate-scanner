@@ -71,7 +71,7 @@ auto Scanner::printFileGroup(std::pmr::map<std::uintmax_t, std::pmr::vector<File
 }
 
 auto Scanner::run() const -> void {
-  std::pmr::vector buffer(block_size_, '\0');
+  std::pmr::vector<char> buffer(block_size_, '\0');
 
   for (auto const& directory : scan_directories_) {
     if (!(std::filesystem::exists(directory) && std::filesystem::is_directory(directory))) {
