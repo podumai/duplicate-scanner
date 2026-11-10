@@ -269,8 +269,8 @@ jobs:
       - name: 'Archive final executable'
         run: >
           Compress-Archive 
-          -Path build\${{ needs.config.outputs.action-type }}\bin\duplicate_scanner.exe 
-          -DestinationPath ${{ github.workspace }}\duplicate-scanner-windows-x86-64.zip 
+          -Path "build\${{ needs.config.outputs.action-type }}\bin\duplicate-scanner.exe" 
+          -DestinationPath "${{ github.workspace }}\duplicate-scanner-windows-x86-64.zip" 
           -Force
 
       - name: 'Upload archive with executable'
