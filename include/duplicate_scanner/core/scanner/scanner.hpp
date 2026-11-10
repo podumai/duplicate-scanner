@@ -7,7 +7,6 @@
 #include <duplicate_scanner/utility/file/file.hpp>
 #include <duplicate_scanner/utility/hasher_factory/hasher_factory.hpp>
 #include <filesystem>
-#include <set>
 #include <type_traits>
 #include <unordered_set>
 #include <vector>

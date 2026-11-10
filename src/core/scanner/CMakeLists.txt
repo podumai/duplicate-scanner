@@ -12,10 +12,12 @@ target_sources(
 )
 target_link_libraries(
         ScannerLib
-        PRIVATE
+        PUBLIC
+        Boost::boost
         HasherFactoryLib::HasherFactoryLib
         FileLib::FileLib
+        UtilityConfigLib
+        PRIVATE
         MemoryManagerLib::MemoryManagerLib
-        boost::boost
         spdlog::spdlog
 )

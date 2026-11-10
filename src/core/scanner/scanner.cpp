@@ -56,15 +56,15 @@ auto Scanner::printFileGroup(std::pmr::map<std::uintmax_t, std::pmr::vector<File
   std::remove_reference_t<decltype(file_groups)>::size_type const file_groups_size{file_groups.size()};
   if (file_groups_size > 1) {
     spdlog::info("File groups:");
-    for (auto const& [group_index, files] : std::views::enumerate(file_groups)) {
+     for (auto const& [group_index, files] : std::views::zip(std::views::iota(0U), file_groups)) {
       spdlog::info("Group: {}", group_index);
-      for (auto&& [local_index, file] : std::views::enumerate(files.second)) {
+       for (auto&& [local_index, file] : std::views::zip(std::views::iota(0U), files.second)) {
         spdlog::info("\t[{}] {}", local_index, file->path().c_str());
       }
     }
   } else if (file_groups_size == 1) {
     spdlog::info("Files:");
-    for (auto&& [index, file] : std::views::enumerate(file_groups.cbegin()->second)) {
+    for (auto&& [index, file] : std::views::zip(std::views::iota(0U), file_groups.cbegin()->second)) {
       spdlog::info("\t[{}] {}", index, file->path().c_str());
     }
   }

@@ -11,6 +11,6 @@ target_sources(
 )
 target_link_libraries(
         HasherFactoryLib
-        PRIVATE
-        boost::boost
+        PUBLIC
+        UtilityHasherLib::UtilityHasherLib
 )

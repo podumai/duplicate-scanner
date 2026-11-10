@@ -128,10 +128,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: 'ubuntu26.04'
+          - os: 'ubuntu-26.04'
             conan-profile: ${{ needs.config.outputs.linux-conan-profile-amd64 }}
             runner-arch: ${{ needs.config.outputs.linux-x86-64-runner-arch }}
-          - os: 'ubuntu26.04-arm'
+          - os: 'ubuntu-26.04-arm'
             conan-profile: ${{ needs.config.outputs.linux-conan-profile-arm64 }}
             runner-arch: ${{ needs.config.outputs.linux-arm64-runner-arch }}
     steps:

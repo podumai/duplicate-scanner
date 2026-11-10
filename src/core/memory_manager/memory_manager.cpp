@@ -1,5 +1,3 @@
-#include <spdlog/spdlog.h>
-
 #include <duplicate_scanner/core/memory_manager/memory_manager.hpp>
 
 namespace duplicate_scanner::core {

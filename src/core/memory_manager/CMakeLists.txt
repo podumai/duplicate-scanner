@@ -9,8 +9,3 @@ target_sources(
         PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/memory_manager.cpp"
 )
-target_link_libraries(
-        MemoryManagerLib
-        PRIVATE
-        spdlog::spdlog
-)

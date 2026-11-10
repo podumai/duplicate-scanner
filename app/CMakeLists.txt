@@ -1,16 +1,11 @@
-add_executable(DuplicateScanner)
-target_sources(
-        DuplicateScanner
-        PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/duplicate_scanner.cpp"
-)
+add_executable(DuplicateScanner duplicate_scanner.cpp)
 target_link_libraries(
         DuplicateScanner
         PRIVATE
         CmdLineParserLib::CmdLineParserLib
         ScannerLib::ScannerLib
         spdlog::spdlog
-        boost::boost
+        Boost::boost
 )
 set_target_properties(
         DuplicateScanner

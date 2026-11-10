@@ -11,6 +11,8 @@ target_sources(
 )
 target_link_libraries(
         CmdLineParserLib
-        PRIVATE
-        boost::boost
+        PUBLIC
+        Boost::boost
+        UtilityConfigLib
+        ScannerLib
 )
