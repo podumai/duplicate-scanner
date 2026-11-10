@@ -1,4 +1,5 @@
 #include <spdlog/spdlog.h>
+#include <spdlog/fmt/std.h>
 
 #include <algorithm>
 #include <boost/regex.hpp>
@@ -63,13 +64,13 @@ auto Scanner::printFileGroup(std::pmr::map<std::uintmax_t, std::pmr::vector<File
      for (auto const& [group_index, files] : std::views::zip(std::views::iota(0U), file_groups)) {
       spdlog::info("Group: {}", group_index);
        for (auto&& [local_index, file] : std::views::zip(std::views::iota(0U), files.second)) {
-        spdlog::info("\t[{}] {}", local_index, file->path().native());
+        spdlog::info("\t[{}] {}", local_index, file->path());
       }
     }
   } else if (file_groups_size == 1) {
     spdlog::info("Files:");
     for (auto&& [index, file] : std::views::zip(std::views::iota(0U), file_groups.cbegin()->second)) {
-      spdlog::info("\t[{}] {}", index, file->path().c_str());
+      spdlog::info("\t[{}] {}", index, file->path());
     }
   }
 }
@@ -79,7 +80,7 @@ auto Scanner::run() const -> void {
 
   for (auto const& directory : scan_directories_) {
     if (!(std::filesystem::exists(directory) && std::filesystem::is_directory(directory))) {
-      spdlog::warn("{} is not a valid directory path. Skipping.", directory.c_str());
+      spdlog::warn("{} is not a valid directory path. Skipping.", directory);
       continue;
     }
 
