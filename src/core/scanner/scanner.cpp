@@ -19,7 +19,11 @@ Scanner::Scanner(utility::Configuration const& configuration)
                    auto const& directory_entry
                  ) -> bool {
     return std::filesystem::file_size(directory_entry) > file_size &&
+      #ifndef _MSC_VER
            boost::regex_match(directory_entry.path().filename().c_str(), filename_mask);
+      #else
+           boost::regex_match(directory_entry.path().filename().string(), filename_mask);
+      #endif
   };
   if (auto hasher{utility::HasherFactory{}(configuration.hash_func_)}; hasher) {
     hasher_ = std::move(hasher);
