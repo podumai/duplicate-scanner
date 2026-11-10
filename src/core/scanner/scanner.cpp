@@ -63,7 +63,7 @@ auto Scanner::printFileGroup(std::pmr::map<std::uintmax_t, std::pmr::vector<File
      for (auto const& [group_index, files] : std::views::zip(std::views::iota(0U), file_groups)) {
       spdlog::info("Group: {}", group_index);
        for (auto&& [local_index, file] : std::views::zip(std::views::iota(0U), files.second)) {
-        spdlog::info("\t[{}] {}", local_index, file->path().c_str());
+        spdlog::info("\t[{}] {}", local_index, file->path().native());
       }
     }
   } else if (file_groups_size == 1) {
