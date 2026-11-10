@@ -46,10 +46,10 @@ jobs:
           
           echo "macos-runner-image=macos-26" >> $GITHUB_OUTPUT
           echo "macos-compiler=apple-clang-17" >> $GITHUB_OUTPUT
-          echo "macos-conan-profile=macos-arm64-${CONAN_PROFILE_SUFFIX}" >> $GITHUB_OUTPUT
+          echo "macos-conan-profile=profiles/macos-arm64-${CONAN_PROFILE_SUFFIX}" >> $GITHUB_OUTPUT
           
           echo "windows-runner-image=windows-2025" >> $GITHUB_OUTPUT
-          echo "windows-conan-profile=windows-x86_64-${CONAN_PROFILE_SUFFIX}" >> $GITHUB_OUTPUT
+          echo "windows-conan-profile=profiles\windows-x86_64-${CONAN_PROFILE_SUFFIX}" >> $GITHUB_OUTPUT
           
           if [[ "${{ github.event_name }}" == "push" ]]; then
             echo "conan-preset=conan-release" >> $GITHUB_OUTPUT
@@ -148,7 +148,7 @@ jobs:
       - name: 'Install project dependencies'
         env:
           CONAN_HOME: '${{ github.workspace }}/.conan2'
-        run: 'uv run conan install . --build=missing --profile:all=${{ matrix.conan-profile }}'
+        run: 'uv run conan install . --build=missing -pr:a ${{ matrix.conan-profile }}'
 
       - name: 'Configure project'
         run: 'uv run cmake --preset ${{ needs.config.outputs.conan-preset }}'
@@ -199,7 +199,7 @@ jobs:
       - name: 'Install project dependencies'
         env:
           CONAN_HOME: '${{ github.workspace }}/.conan2'
-        run: 'conan install . --build=missing --profile:all=${{ needs.config.outputs.macos-conan-profile }}'
+        run: 'conan install . --build=missing -pr:a ${{ needs.config.outputs.macos-conan-profile }}'
 
       - name: 'Configure project'
         run: 'cmake --preset ${{ needs.config.outputs.conan-preset }}'
@@ -243,7 +243,7 @@ jobs:
           ninja: true
 
       - name: 'Install project dependencies'
-        run: 'conan install --build=missing -pr:a profiles\${{ needs.config.outputs.windows-conan-profile }} .'
+        run: 'conan install --build=missing -pr:a ${{ needs.config.outputs.windows-conan-profile }} .'
 
       - name: 'Configure project'
         run: 'cmake --preset ${{ needs.config.outputs.conan-preset }}'

@@ -6,7 +6,7 @@ compiler.version=195
 compiler.cppstd=23
 compiler.runtime=static
 compiler.runtime_type=Release
-build_type=Debug
+build_type=Release
 
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja
