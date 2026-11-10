@@ -179,7 +179,7 @@ jobs:
         run: 'echo ${{ needs.pre-compute-next-version.outputs.next_project_version }} > PROJECT_VERSION'
 
       - name: 'Setup C++ build dependencies'
-        run: 'aminya/setup-cpp@v1'
+        uses: 'aminya/setup-cpp@v1'
         with:
           compiler: ${{ needs.config.outputs.macos-compiler }}
           cmake: true
