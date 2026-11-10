@@ -14,7 +14,7 @@ class DuplicateScanner(ConanFile):
         cmake_layout(self)
 
     def configure(self) -> None:
-        self.options["boost"].without_test = False
+        self.options["boost"].without_test = True
         self.options["boost"].shared = False
         self.options["boost"].without_graph = True
         self.options["boost"].without_log = True
@@ -31,3 +31,14 @@ class DuplicateScanner(ConanFile):
         self.options["boost"].without_contract = True
         self.options["boost"].without_timer = True
         self.options["boost"].without_type_erasure = True
+        self.options["boost"].without_atomic = True
+        self.options["boost"].without_filesystem = True
+        self.options["boost"].without_charconv = True
+        self.options["boost"].without_chrono = True
+        self.options["boost"].without_context = True
+        self.options["boost"].without_coroutine = True
+        self.options["boost"].without_date_time = True
+        self.options["boost"].without_fiber = True
+        self.options["boost"].without_process = True
+        self.options["boost"].without_thread = True
+        self.options["boost"].without_serialization = True
