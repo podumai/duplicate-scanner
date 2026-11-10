@@ -33,7 +33,7 @@ jobs:
       windows-conan-profile: ${{ steps.constants.outputs.windows-conan-profile }}
 
       conan-preset: ${{ steps.constants.outputs.conan-preset }}
-      action-type: ${{ steps.constant.outputs.action-type }}
+      action-type: ${{ steps.constants.outputs.action-type }}
     steps:
       - name: 'Define constants'
         id: 'constants'
@@ -124,7 +124,7 @@ jobs:
       contents: 'read'
       packages: 'read'
     container:
-      image: 'ghcr.io/podumai/cpp:0.2.0-ubuntu26.04'
+      image: 'ghcr.io/podumai/cpp:0.2.1-ubuntu26.04'
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -144,7 +144,7 @@ jobs:
 
       - name: '[Release] Advance project version'
         if: github.event_name == 'push'
-        run: 'echo ${{ needs.pre-compute-next-version.outputs.next_project_version }} > PROJECT_VERSION'
+        run: 'echo "${{ needs.pre-compute-next-version.outputs.next_project_version }}" > PROJECT_VERSION'
 
       - name: 'Sync dev dependencies'
         run: 'uv sync --frozen'
@@ -242,6 +242,9 @@ jobs:
       - name: '[Release] Advance project version'
         if: github.event_name == 'push'
         run: 'write-output "${{ needs.pre-compute-next-version.outputs.next_project_version }}" | out-file PROJECT_VERSION'
+
+      - name: 'Setup C++ toolchain'
+        uses: 'ilammy/msvc-dev-cmd@v1'
 
       - name: 'Setup C++ build dependencies'
         uses: 'aminya/setup-cpp@v1'
