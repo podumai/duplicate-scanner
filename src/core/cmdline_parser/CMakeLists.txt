@@ -13,6 +13,8 @@ target_link_libraries(
         CmdLineParserLib
         PUBLIC
         Boost::boost
+        Boost::program_options
         UtilityConfigLib
-        ScannerLib
+        PRIVATE
+        HasherFactoryLib::HasherFactoryLib
 )

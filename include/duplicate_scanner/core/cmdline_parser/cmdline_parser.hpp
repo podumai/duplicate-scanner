@@ -2,7 +2,6 @@
 #define DUPSCANNER_CMDLINE_PARSER_HPP
 
 #include <boost/program_options.hpp>
-#include <duplicate_scanner/core/scanner/scanner.hpp>
 #include <duplicate_scanner/utility/config/config.hpp>
 #include <span>
 #include <string_view>
