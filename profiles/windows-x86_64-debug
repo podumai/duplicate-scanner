@@ -1,0 +1,18 @@
+[settings]
+os=Windows
+arch=x86_64
+compiler=msvc
+compiler.version=195
+compiler.cppstd=23
+compiler.runtime=static
+compiler.runtime_type=Debug
+build_type=Debug
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+
+[options]
+*:shared=False
+
+[buildenv]
+CMAKE_GENERATOR=Ninja Multi-Config

@@ -29,6 +29,9 @@ jobs:
       macos-compiler: ${{ steps.constants.outputs.macos-compiler }}
       macos-conan-profile: ${{ steps.constants.outputs.macos-conan-profile }}
 
+      windows-runner-image: ${{ steps.constants.outputs.windows-runner-image }}
+      windows-conan-profile: ${{ steps.constants.outputs.windows-conan-profile }}
+
       conan-preset: ${{ steps.constants.outputs.conan-preset }}
       action-type: ${{ steps.constant.outputs.action-type }}
     steps:
@@ -44,6 +47,9 @@ jobs:
           echo "macos-runner-image=macos-26" >> $GITHUB_OUTPUT
           echo "macos-compiler=apple-clang-17" >> $GITHUB_OUTPUT
           echo "macos-conan-profile=macos-arm64-${CONAN_PROFILE_SUFFIX}" >> $GITHUB_OUTPUT
+          
+          echo "windows-runner-image=windows-2025" >> $GITHUB_OUTPUT
+          echo "windows-conan-profile=windows-x86_64-${CONAN_PROFILE_SUFFIX}" >> $GITHUB_OUTPUT
           
           if [[ "${{ github.event_name }}" == "push" ]]; then
             echo "conan-preset=conan-release" >> $GITHUB_OUTPUT
@@ -150,10 +156,10 @@ jobs:
       - name: 'Build project'
         run: 'uv run cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
 
-      - name: 'Archive complete build artifacts'
+      - name: 'Archive final executable'
         run: 'tar -czvf duplicate-runner-linux-${{ matrix.runner-arch }}.tar.gz -C build/${{ needs.config.outputs.action-type }}/bin .'
 
-      - name: 'Upload final executable archive'
+      - name: 'Upload archive with executable'
         uses: 'actions/upload-artifact@v7'
         with:
           name: 'duplicate-scanner-${{ github.run_id }}-linux-${{ matrix.runner-arch }}'
@@ -201,10 +207,10 @@ jobs:
       - name: 'Build project'
         run: 'cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
 
-      - name: 'Archive complete build artifacts'
+      - name: 'Archive final executable'
         run: 'tar -czvf duplicate-scanner-macos-arm64.tar.gz -C build/${{ needs.config.outputs.action-type }}/bin .'
 
-      - name: 'Upload complete build archive'
+      - name: 'Upload archive with executable'
         uses: 'actions/upload-artifact@v7'
         with:
           name: 'duplicate-scanner-${{ github.run_id }}-macos-arm64'
@@ -218,6 +224,54 @@ jobs:
           path: '${{ github.workspace }}/.conan2'
           key: conan-${{ runner.os }}-${{ github.run_id }}
 
+  build-windows:
+    runs-on: ${{ needs.config.outputs.windows-runner-image }}
+    needs: [ 'config', 'pre-compute-next-version' ]
+    steps:
+      - name: 'Clone repository'
+        uses: 'actions/checkout@v7'
+
+      - name: '[Release] Advance project version'
+        if: github.event_name == 'push'
+        run: 'write-output "${{ needs.pre-compute-next-version.outputs.next_project_version }}" | out-file PROJECT_VERSION'
+
+      - name: 'Setup C++ build dependencies'
+        uses: 'aminya/setup-cpp@v1'
+        with:
+          conan: true
+          cmake: true
+          ninja: true
+
+      - name: 'Install project dependencies'
+        run: 'conan install --build=missing -pr:a profiles\${{ needs.config.outputs.windows-conan-profile }} .'
+
+      - name: 'Configure project'
+        run: 'cmake --preset ${{ needs.config.outputs.conan-preset }}'
+
+      - name: 'Build project'
+        run: 'cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
+
+      - name: 'Archive final executable'
+        run: >
+          Compress-Archive 
+          -Path build\${{ needs.config.outputs.action-type }}\bin\duplicate_scanner.exe 
+          -DestinationPath ${{ github.workspace }}\duplicate-scanner-windows-x86-64.zip 
+          -Force
+
+      - name: 'Upload archive with executable'
+        uses: 'actions/upload-artifact@v7'
+        with:
+          name: 'duplicate-scanner-${{ github.run_id }}-windows-x86-64'
+          path: 'duplicate-scanner-windows-x86-64.zip'
+          retention-days: 1
+          overwrite: true
+
+      - name: 'Cache conan directories'
+        uses: 'actions/cache@v5'
+        with:
+          path: '${{ github.workspace }}\.conan2'
+          key: 'conan-${{ runner.os }}-${{ github.run_id }}'
+
   release:
     runs-on: ${{ needs.config.outputs.linux-runner-image }}
     permissions:
@@ -227,6 +281,7 @@ jobs:
       - 'pre-compute-next-version'
       - 'build-linux'
       - 'build-macos'
+      - 'build-windows'
     if: github.event_name == 'push'
     steps:
       - name: 'Clone repository'
