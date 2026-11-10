@@ -1,0 +1,15 @@
+[project]
+name = "duplicate-scanner"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Kirill Morozov", email = "kirillsm05@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "cmake==4.4.4",
+    "conan==2.34.0",
+]

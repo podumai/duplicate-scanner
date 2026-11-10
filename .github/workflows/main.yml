@@ -1,0 +1,255 @@
+name: 'CI/CD'
+
+on:
+  workflow_dispatch: { }
+
+  push:
+    branches: [ 'main' ]
+
+  pull_request:
+    branches: [ 'main' ]
+
+concurrency:
+  group: "workflow-${{ github.event_name }}"
+  queue: 'max'
+
+jobs:
+  config:
+    runs-on: 'ubuntu-24.04'
+    permissions: { }
+    outputs:
+      linux-runner-image: ${{ steps.constants.outputs.linux-runner-image }}
+      linux-compiler: ${{ steps.constants.outputs.linux-compiler }}
+      linux-conan-profile-amd64: ${{ steps.constants.outputs.linux-conan-profile-amd64 }}
+      linux-conan-profile-arm64: ${{ steps.constants.outputs.linux-conan-profile-arm64 }}
+      linux-x86-64-runner-arch: ${{ steps.constants.outputs.linux-x86-64-runner-arch }}
+      linux-arm64-runner-arch: ${{ steps.constants.outputs.linux-arm64-runner-arch }}
+
+      macos-runner-image: ${{ steps.constants.outputs.macos-runner-image }}
+      macos-compiler: ${{ steps.constants.outputs.macos-compiler }}
+      macos-conan-profile: ${{ steps.constants.outputs.macos-conan-profile }}
+
+      conan-preset: ${{ steps.constants.outputs.conan-preset }}
+      action-type: ${{ steps.constant.outputs.action-type }}
+    steps:
+      - name: 'Define constants'
+        id: 'constants'
+        run: |
+          CONAN_PROFILE_SUFFIX=${{ github.event_name == 'push' && 'release' || 'debug' }}
+          
+          echo "linux-runner-image=ubuntu-26.04" >> $GITHUB_OUTPUT
+          echo "linux-x86-64-runner-arch=x86_64" >> $GITHUB_OUTPUT
+          echo "linux-arm64-runner-arch=aarch64" >> $GITHUB_OUTPUT
+          
+          echo "macos-runner-image=macos-26" >> $GITHUB_OUTPUT
+          echo "macos-compiler=apple-clang-17" >> $GITHUB_OUTPUT
+          echo "macos-conan-profile=macos-arm64-${CONAN_PROFILE_SUFFIX}" >> $GITHUB_OUTPUT
+          
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "conan-preset=conan-release" >> $GITHUB_OUTPUT
+            echo "action-type=Release" >> $GITHUB_OUTPUT
+            echo "linux-conan-profile-amd64=profiles/linux-x86_64-release" >> $GITHUB_OUTPUT
+            echo "linux-conan-profile-arm64=profiles/linux-arm64-release" >> $GITHUB_OUTPUT
+          else
+            echo "conan-preset=conan-debug" >> $GITHUB_OUTPUT
+            echo "action-type=Debug" >> $GITHUB_OUTPUT
+            echo "linux-conan-profile-amd64=profiles/linux-x86_64-debug" >> $GITHUB_OUTPUT
+            echo "linux-conan-profile-arm64=profiles/linux-arm64-debug" >> $GITHUB_OUTPUT
+          fi
+
+  lint-commits:
+    runs-on: ${{ needs.config.outputs.linux-runner-image }}
+    permissions:
+      contents: 'read'
+    needs: [ 'config' ]
+    steps:
+      - name: 'Clone the repository'
+        uses: 'actions/checkout@v7'
+        with:
+          fetch-depth: 0
+
+      - name: 'Setup node'
+        uses: 'actions/setup-node@v6'
+        with:
+          node-version: 'lts/*'
+
+      - name: 'Install commitlint'
+        run: npm install -D @commitlint/cli @commitlint/config-conventional
+
+      - name: 'Validate commits'
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            npx commitlint --from ${{ github.event.before }} --to ${{ github.event.after }} --verbose
+          else
+            npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+          fi
+
+  pre-compute-next-version:
+    runs-on: ${{ needs.config.outputs.linux-runner-image }}
+    needs: [ 'config', 'lint-commits' ]
+    outputs:
+      next_project_version: ${{ steps.version.outputs.new_release_version }}
+    permissions:
+      contents: 'write'
+    steps:
+      - name: 'Clone repository'
+        uses: 'actions/checkout@v7'
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: 'Compute semantic version'
+        id: 'version'
+        uses: 'cycjimmy/semantic-release-action@v8'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dry_run: true
+          semantic_version: '25'
+          extra_plugins: |
+            conventional-changelog-conventionalcommits@^9
+            @semantic-release/changelog@^7
+            @semantic-release/git@^11
+            @semantic-release/exec@^7
+
+  build-linux:
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: 'read'
+    container:
+      image: 'ghcr.io/podumai/cpp:0.2.0-ubuntu26.04'
+    needs: [ 'config', 'pre-compute-next-version' ]
+    strategy:
+      matrix:
+        include:
+          - os: 'ubuntu26.04'
+            conan-profile: ${{ needs.config.outputs.linux-conan-profile-amd64 }}
+            runner-arch: ${{ needs.config.outputs.linux-x86-64-runner-arch }}
+          - os: 'ubuntu26.04-arm'
+            conan-profile: ${{ needs.config.outputs.linux-conan-profile-arm64 }}
+            runner-arch: ${{ needs.config.outputs.linux-arm64-runner-arch }}
+    steps:
+      - name: 'Clone repository'
+        uses: 'actions/checkout@v7'
+
+      - name: '[Release] Advance project version'
+        if: github.event_name == 'push'
+        run: 'echo ${{ needs.pre-compute-next-version.outputs.next_project_version }} > PROJECT_VERSION'
+
+      - name: 'Sync dev dependencies'
+        run: 'uv sync --frozen'
+
+      - name: 'Install project dependencies'
+        env:
+          CONAN_HOME: '${{ github.workspace }}/.conan2'
+        run: 'uv run conan install . --build=missing --profile:all=${{ matrix.conan-profile }}'
+
+      - name: 'Configure project'
+        run: 'uv run cmake --preset ${{ needs.config.outputs.conan-preset }}'
+
+      - name: 'Build project'
+        run: 'uv run cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
+
+      - name: 'Archive complete build artifacts'
+        run: 'tar -czvf duplicate-runner-linux-${{ matrix.runner-arch }}.tar.gz -C build/${{ needs.config.outputs.action-type }}/bin .'
+
+      - name: 'Upload final executable archive'
+        uses: 'actions/upload-artifact@v7'
+        with:
+          name: 'duplicate-scanner-${{ github.run_id }}-linux-${{ matrix.runner-arch }}'
+          path: 'duplicate-scanner-linux-${{ matrix.runner-arch }}.tar.gz'
+          retention-days: 1
+          overwrite: true
+
+      - name: 'Cache conan directories'
+        uses: 'actions/cache@v5'
+        with:
+          path: '${{ github.workspace }}/.conan2'
+          key: conan-${{ runner.os }}-${{ github.run_id }}
+
+  build-macos:
+    runs-on: ${{ needs.config.outputs.macos-runner-image }}
+    needs: [ 'config', 'pre-compute-next-version' ]
+    steps:
+      - name: 'Clone repository'
+        uses: 'actions/checkout@v7'
+
+      - name: '[Release] Advance project version'
+        if: github.event_name == 'push'
+        run: 'echo ${{ needs.pre-compute-next-version.outputs.next_project_version }} > PROJECT_VERSION'
+
+      - name: 'Setup C++ build dependencies'
+        run: 'aminya/setup-cpp@v1'
+        with:
+          compiler: ${{ needs.config.outputs.macos-compiler }}
+          cmake: true
+          conan: true
+          ninja: true
+
+      - name: '[Release] Advance project version'
+        if: github.event_name == 'push'
+        run: 'echo ${{ needs.pre-compute-next-version.outputs.next_project_version }} > PROJECT_VERSION'
+
+      - name: 'Install project dependencies'
+        env:
+          CONAN_HOME: '${{ github.workspace }}/.conan2'
+        run: 'conan install . --build=missing --profile:all=${{ needs.config.outputs.macos-conan-profile }}'
+
+      - name: 'Configure project'
+        run: 'cmake --preset ${{ needs.config.outputs.conan-preset }}'
+
+      - name: 'Build project'
+        run: 'cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
+
+      - name: 'Archive complete build artifacts'
+        run: 'tar -czvf duplicate-scanner-macos-arm64.tar.gz -C build/${{ needs.config.outputs.action-type }}/bin .'
+
+      - name: 'Upload complete build archive'
+        uses: 'actions/upload-artifact@v7'
+        with:
+          name: 'duplicate-scanner-${{ github.run_id }}-macos-arm64'
+          path: 'duplicate-scanner-macos-arm64.tar.gz'
+          retention-days: 1
+          overwrite: true
+
+      - name: 'Cache conan directories'
+        uses: 'actions/cache@v5'
+        with:
+          path: '${{ github.workspace }}/.conan2'
+          key: conan-${{ runner.os }}-${{ github.run_id }}
+
+  release:
+    runs-on: ${{ needs.config.outputs.linux-runner-image }}
+    permissions:
+      contents: 'write'
+    needs:
+      - 'config'
+      - 'pre-compute-next-version'
+      - 'build-linux'
+      - 'build-macos'
+    if: github.event_name == 'push'
+    steps:
+      - name: 'Clone repository'
+        uses: 'actions/checkout@v7'
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: 'Download archived release executables'
+        uses: 'actions/download-artifact@v8'
+        with:
+          pattern: 'duplicate-scanner-${{ github.run_id }}-*'
+          path: 'release-assets'
+          merge-multiple: true
+
+      - name: 'Create GitHub release'
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+        uses: 'cycjimmy/semantic-release-action@v8'
+        with:
+          semantic_version: '25'
+          extra_plugins: |
+            conventional-changelog-conventionalcommits@^9
+            @semantic-release/changelog@^7
+            @semantic-release/git@^11
+            @semantic-release/exec@^7

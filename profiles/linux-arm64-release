@@ -1,0 +1,25 @@
+[settings]
+os=Linux
+arch=armv8
+compiler=clang
+compiler.version=22
+compiler.cppstd=23
+compiler.libcxx=libc++
+build_type=Release
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+tools.cmake.cmaketoolchain:extra_variables={"CMAKE_CXX_STANDARD_LIBRARIES": "-lc++abi"}
+tools.build:compiler_executables={"c":"/usr/local/bin/clang","cpp":"/usr/local/bin/clang++"}
+tools.build:exelinkflags=["-L/usr/lib/llvm-22/lib/","-Wl,-rpath,/usr/lib/llvm-22/lib/","--rtlib=compiler-rt","-unwindlib=libunwind"]
+tools.build:sharedlinkflags=["-L/usr/lib/llvm-22/lib/","-Wl,-rpath,/usr/lib/llvm-22/lib/","--rtlib=compiler-rt","-unwindlib=libunwind"]
+tools.build:cflags=["--rtlib=compiler-rt"]
+tools.build:cxxflags=["--rtlib=compiler-rt","-unwindlib=libunwind"]
+
+[options]
+*:shared=False
+
+[buildenv]
+CC=/usr/local/bin/clang
+CXX=/usr/local/bin/clang++
+CMAKE_GENERATOR=Ninja Multi-Config
