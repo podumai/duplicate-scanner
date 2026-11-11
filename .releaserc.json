@@ -42,7 +42,10 @@
       {
         "successComment": false,
         "failComment": false,
-        "assets": [ "release-assets/*.tar.gz" ]
+        "assets": [
+          "release-assets/*.tar.gz",
+          "release-assets/*.zip"
+        ]
       }
     ]
   ]

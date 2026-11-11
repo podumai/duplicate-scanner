@@ -161,7 +161,7 @@ jobs:
         run: 'uv run cmake --build --preset ${{ needs.config.outputs.conan-preset }}'
 
       - name: 'Archive final executable'
-        run: 'tar -czvf duplicate-runner-linux-${{ matrix.runner-arch }}.tar.gz -C build/${{ needs.config.outputs.action-type }}/bin .'
+        run: 'tar -czvf duplicate-scanner-linux-${{ matrix.runner-arch }}.tar.gz -C build/${{ needs.config.outputs.action-type }}/bin .'
 
       - name: 'Upload archive with executable'
         uses: 'actions/upload-artifact@v7'
