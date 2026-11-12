@@ -40,7 +40,9 @@ Scanner::Scanner(utility::Configuration const& configuration)
   };
   std::pmr::map<std::uintmax_t, std::pmr::vector<FilePtr>> file_groups{};
 
-  for (auto const& directory_entry : directory_traverser) {
+  auto const end = std::filesystem::recursive_directory_iterator{};
+  for (; directory_traverser != end; ++directory_traverser) {
+    auto const& directory_entry = *directory_traverser;
     if (directory_entry.is_directory() && (std::cmp_greater_equal(directory_traverser.depth(), scan_depth_) ||
                                            excluded_directories_.contains(directory_entry))) {
       directory_traverser.disable_recursion_pending();
