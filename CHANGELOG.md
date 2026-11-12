@@ -1,3 +1,9 @@
+## [1.1.1](https://github.com/podumai/duplicate-scanner/compare/v1.1.0...v1.1.1) (2026-11-12)
+
+### Bug Fixes
+
+* change recursive iterator traversal when initializing file groups ([6531890](https://github.com/podumai/duplicate-scanner/commit/65318901ad12e3cba29fd85d5d113030bba54146))
+
 ## [1.1.0](https://github.com/podumai/duplicate-scanner/compare/v1.0.0...v1.1.0) (2026-11-11)
 
 ### Features
